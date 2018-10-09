@@ -13,7 +13,8 @@ lazy val `embedded-cats-effect` = (project in file("./embedded-cats-effect")).
     commonSettings,
     name := "embedded-cats-effect",
     libraryDependencies ++= Seq(
-      "org.apache.solr" % "solr-core" % "7.5.0"
+      "org.apache.solr" % "solr-core" % "7.5.0",
+      "commons-io" % "commons-io" % "2.6" % Test
     )
   ).dependsOn(core, `cats-effect`)
 
