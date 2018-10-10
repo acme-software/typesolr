@@ -8,11 +8,11 @@ import org.apache.solr.client.solrj.SolrClient
 case class Client(solr: SolrClient) extends core.Client[IO] {
 
   override def index[T](document: T)(implicit documentEncoder: DocumentEncoder[T]): IO[Unit] = IO {
-    solr.add(documentEncoder.encode(document).build())
+    doIndex(document)
   }
 
   override def query[T](): IO[core.Client.QueryResult[T]] = IO {
-    ???
+    doQuery()
   }
 }
 

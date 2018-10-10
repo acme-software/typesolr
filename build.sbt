@@ -1,5 +1,5 @@
 
-lazy val core = (project in file("./core")).
+lazy val `typesolr-core` = (project in file("./typesolr-core")).
   settings(
     commonSettings,
     name := "typesolr-core",
@@ -8,24 +8,33 @@ lazy val core = (project in file("./core")).
     )
   )
 
-lazy val `embedded-cats-effect` = (project in file("./embedded-cats-effect")).
-  settings(
-    commonSettings,
-    name := "embedded-cats-effect",
-    libraryDependencies ++= Seq(
-      "org.apache.solr" % "solr-core" % "7.5.0",
-      "commons-io" % "commons-io" % "2.6" % Test
-    )
-  ).dependsOn(core, `cats-effect`)
-
-lazy val `cats-effect` = (project in file("./cats-effect")).
+lazy val `typesolr-cats-effect` = (project in file("./typesolr-cats-effect")).
   settings(
     commonSettings,
     name := "typesolr-cats-effect",
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-effect" % "1.0.0"
     )
-  ).dependsOn(core)
+  ).dependsOn(`typesolr-core`)
+
+lazy val `typesolr-embedded-cats-effect` = (project in file("./typesolr-embedded-cats-effect")).
+  settings(
+    commonSettings,
+    name := "typesolr-embedded-cats-effect",
+    libraryDependencies ++= Seq(
+      "org.apache.solr" % "solr-core" % "7.5.0",
+      "commons-io" % "commons-io" % "2.6" % Test
+    )
+  ).dependsOn(`typesolr-core`, `typesolr-cats-effect`)
+
+lazy val `typesolr-zio` = (project in file("./typesolr-zio")).
+  settings(
+    commonSettings,
+    name := "typesolr-zio",
+    libraryDependencies ++= Seq(
+      "org.scalaz" %% "scalaz-zio" % "0.2.11"
+    )
+  ).dependsOn(`typesolr-core`)
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.12.7",
@@ -45,7 +54,7 @@ lazy val commonSettings = Seq(
     "-language:implicitConversions",
     "-unchecked",
     "-Xcheckinit",
-    //"-Xfatal-warnings",
+    "-Xfatal-warnings",
     "-Xfuture",
     "-Xlint:adapted-args",
     "-Xlint:by-name-right-associative",
