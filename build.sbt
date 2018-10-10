@@ -2,7 +2,6 @@
 lazy val `typesolr-core` = (project in file("./typesolr-core")).
   settings(
     commonSettings,
-    name := "typesolr-core",
     libraryDependencies ++= Seq(
       "org.apache.solr" % "solr-solrj" % "7.5.0"
     )
@@ -11,7 +10,6 @@ lazy val `typesolr-core` = (project in file("./typesolr-core")).
 lazy val `typesolr-cats-effect` = (project in file("./typesolr-cats-effect")).
   settings(
     commonSettings,
-    name := "typesolr-cats-effect",
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-effect" % "1.0.0"
     )
@@ -20,7 +18,6 @@ lazy val `typesolr-cats-effect` = (project in file("./typesolr-cats-effect")).
 lazy val `typesolr-embedded-cats-effect` = (project in file("./typesolr-embedded-cats-effect")).
   settings(
     commonSettings,
-    name := "typesolr-embedded-cats-effect",
     libraryDependencies ++= Seq(
       "org.apache.solr" % "solr-core" % "7.5.0",
       "commons-io" % "commons-io" % "2.6" % Test
@@ -30,7 +27,6 @@ lazy val `typesolr-embedded-cats-effect` = (project in file("./typesolr-embedded
 lazy val `typesolr-zio` = (project in file("./typesolr-zio")).
   settings(
     commonSettings,
-    name := "typesolr-zio",
     libraryDependencies ++= Seq(
       "org.scalaz" %% "scalaz-zio" % "0.2.11"
     )
