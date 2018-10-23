@@ -3,7 +3,8 @@ lazy val `typesolr-core` = (project in file("./typesolr-core")).
   settings(
     commonSettings,
     libraryDependencies ++= Seq(
-      "org.apache.solr" % "solr-solrj" % "7.5.0"
+      "org.apache.solr" % "solr-solrj" % "7.5.0",
+      "com.chuusai" %% "shapeless" % "2.3.3"
     )
   )
 
@@ -83,12 +84,12 @@ lazy val commonSettings = Seq(
     "-Ywarn-nullary-override",
     "-Ywarn-nullary-unit",
     "-Ywarn-numeric-widen",
-    "-Ywarn-unused:implicits",
-    "-Ywarn-unused:imports",
-    "-Ywarn-unused:locals",
-    "-Ywarn-unused:params",
-    "-Ywarn-unused:patvars",
-    "-Ywarn-unused:privates"
+    //"-Ywarn-unused:implicits",
+    //"-Ywarn-unused:imports",
+    //"-Ywarn-unused:locals",
+    //"-Ywarn-unused:params",
+    //"-Ywarn-unused:patvars",
+    //"-Ywarn-unused:privates"
     //"-Ywarn-value-discard"
   )
 )
