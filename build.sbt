@@ -17,15 +17,6 @@ lazy val `typesolr-cats-effect` = (project in file("./typesolr-cats-effect")).
     )
   ).dependsOn(`typesolr-core`)
 
-lazy val `typesolr-embedded-cats-effect` = (project in file("./typesolr-embedded-cats-effect")).
-  settings(
-    commonSettings,
-    libraryDependencies ++= Seq(
-      "org.apache.solr" % "solr-core" % "7.5.0",
-      "commons-io" % "commons-io" % "2.6" % Test
-    )
-  ).dependsOn(`typesolr-core`, `typesolr-cats-effect`)
-
 lazy val `typesolr-zio` = (project in file("./typesolr-zio")).
   settings(
     commonSettings,

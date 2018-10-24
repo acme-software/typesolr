@@ -2,7 +2,7 @@ package ch.acmesoftware.typesolr.catseffect
 
 import cats.effect.IO
 import ch.acmesoftware.typesolr.core
-import ch.acmesoftware.typesolr.core.{ClientFactory, DocumentEncoder}
+import ch.acmesoftware.typesolr.core.{ClientFactory, DocumentDecoder, DocumentEncoder}
 import org.apache.solr.client.solrj.SolrClient
 
 case class Client(solr: SolrClient) extends core.Client[IO] {
@@ -11,8 +11,8 @@ case class Client(solr: SolrClient) extends core.Client[IO] {
     doIndex(document)
   }
 
-  override def query[T](): IO[core.Client.QueryResult[T]] = IO {
-    doQuery()
+  override def query[T](q: String)(implicit documentDecoder: DocumentDecoder[T]): IO[core.Client.QueryResult[T]] = IO {
+    doQuery(q)
   }
 }
 
