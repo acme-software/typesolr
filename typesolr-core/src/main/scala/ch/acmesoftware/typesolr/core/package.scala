@@ -1,8 +1,10 @@
 package ch.acmesoftware.typesolr
 
-import ch.acmesoftware.typesolr.core.Field.{EmptyValue, DecodingError, TypeMismatch}
+import ch.acmesoftware.typesolr.core.FieldDecoder.{EmptyValue, TypeMismatch}
 
-import scala.util.Try
+import cats.data._
+import cats.data.Validated._
+import cats.implicits._
 
 package object core {
 
@@ -30,15 +32,18 @@ package object core {
   implicit def listFieldEncoder[T](implicit enc: FieldEncoder[T]): FieldEncoder[List[T]] =
     f => f.key -> f.value.flatMap(valueEncode(_, enc))
 
+
+  def valueEncode[T](v: T, enc: FieldEncoder[T]): List[String] = enc.encode(Field("", v))._2
+
   // field decoders
 
   private def fromStringFieldDecoder[T](f: String => T): FieldDecoder[T] = (k, v) => v.headOption.map{strV =>
     try{
-      Right(Field(k, f(strV)))
+      Field(k, f(strV)).validNel
     } catch {
-      case e: Throwable => Left(TypeMismatch(k))
+      case e: Throwable => TypeMismatch(k).invalidNel
     }
-  }.getOrElse(Left(EmptyValue(k)))
+  }.getOrElse(EmptyValue(k).invalidNel)
 
   implicit val stringFieldDecoder: FieldDecoder[String] = fromStringFieldDecoder(_.toString)
   implicit val intFieldDecoder: FieldDecoder[Int] = fromStringFieldDecoder(_.toInt)
@@ -52,6 +57,6 @@ package object core {
   //  case Left(e) => Left[](Some(e))
   //}
 
-  def valueEncode[T](v: T, enc: FieldEncoder[T]): List[String] = enc.encode(Field("", v))._2
+
 
 }
