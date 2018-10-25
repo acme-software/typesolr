@@ -25,11 +25,6 @@ lazy val `typesolr-zio` = (project in file("./typesolr-zio")).
     )
   ).dependsOn(`typesolr-core`)
 
-lazy val `typesolr-query-dsl` = project.
-  settings(
-    commonSettings
-  )
-
 lazy val commonSettings = Seq(
   scalaVersion := "2.12.7",
   resolvers += "Restlet Repository" at "http://maven.restlet.org",

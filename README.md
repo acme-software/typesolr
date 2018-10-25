@@ -8,6 +8,27 @@ TypeSOLR - A typed Scala Client for Apache Solr
 ***By now, this is totally experimental and by no means production-ready. Provided information and code can be buggy, 
 not yet implemented or completely wrong. Working towards a first stable version (`1.0.0`)***
 
+Usage
+-----
+
+Install using SBT:
+
+```scala
+libraryDependencies += "ch.acmesoftware" %% "typesolr-core" % "VERSION"
+```
+
+This lib is intended to use together with an IO-Monad, because talking to a SOLR server is effectful. By now, there are 
+implementations for [Cats Effect](https://typelevel.org/cats-effect/) and [ZIO](https://scalaz.github.io/scalaz-zio/).
+
+Use one of the following:
+
+```scala
+libraryDependencies += "ch.acmesoftware" %% "typesolr-cats-effect" % "VERSION"
+libraryDependencies += "ch.acmesoftware" %% "typesolr-zio" % "VERSION"
+```
+
+Basically, this is a tagless final DSL, so you can also implement your own effect type...
+
 Typesafe Query DSL
 ------------------
 
@@ -34,35 +55,33 @@ result of a combination will be a `Query` again.
 -  the other operators used in the example are a left-and-right wildcard match (`=*:*=`) and a fuzzy match (`=~=`). See 
 the operators reference for details.
 
-### Usage
-
-This can be used as standalone solr query generator, which produces strings, or together with the TypeSOLR client.
-
-Install using SBT:
-
-```scala
-libraryDependencies += "ch.acmesoftware" %% "typesolr-querydsl" % "VERSION"
-```
-
 ### Operator Reference
 
-| Operator          | Parameters         | Description                          |
-|-------------------|--------------------|--------------------------------------|
-| `F =:= v`         | None               | Exact value match for a field        |
-| `F =*:= S`        | None               | Wildcard match (left side)           |
-| `F =:*= S`        | None               | Wildcard match (right side)          |
-| `F =*:*= S`       | None               | Wildcard match (both sides)          |
-| `F =~= S`         | None               | Fuzzy match                          |
-| `F =~=(amount) S` | `amount`: Double   | Fuzzy match with amount              |
-| `Q and Q`         | None               | Combines two queries with AND        |
-| `Q or Q`          | None               | Combines two queries with OR         |
-| `(` / `)`         | None               | Logical grouping                     |
+#### Logical
 
-**Legend:**
+| Operator      | Method / Object                                         | Description                          |
+|---------------|---------------------------------------------------------|--------------------------------------|
+| `and`         | `Query.And(a, b)`                                       | Combines two queries with AND        |
+| `or`          | `Query.Or(a, b)`                                        | Combines two queries with OR         |
+| `(` / `)`     | - Not needed, because of infix notation -               | Logical grouping                     |
 
--  `F` Field name
--  `V` Any value
--  `S` String value
--  `Q` Query
+#### Field Queries
+
+| Operator      | Method                                                  | Description                          |
+|---------------|---------------------------------------------------------|--------------------------------------|
+| `=:=`         | `exact[T](value: T)`                                    | Exact value match for a field        |
+| `=*:=`        | `wildcard[T](value: String, wildcardType: WildcardType)`| Wildcard match (left side)           |
+| `=:*=`        | `wildcard[T](value: String, wildcardType: WildcardType)`| Wildcard match (right side)          |
+| `=*:*=`       | `wildcard[T](value: String, wildcardType: WildcardType)`| Wildcard match (both sides)          |
+| `=~=`         | `fuzzy(value: String)`                                  | Fuzzy match                          |
+| `=~=(amount)` | `fuzzy(value: String).at(amount: Int)`                  | Fuzzy match with amount              |
+
+#### Additional
+
+| Operator                        | Method                             | Description                                               |
+|---------------------------------|------------------------------------|-----------------------------------------------------------|
+| `^^ "field"`                    | `highlight[T](field: String)`      | Enables SOLR's term highlighting for the given field name |
+| `^^ "a" :: "b" :: "c"`          | `highlight[T](fields: Seq[String])`| Enables SOLR's term highlighting for multiple fields      |
+| `^^ "field" t "<b>" </> "</b>"` | `highlight[T](fields: Seq[String])`| Highlighting with custom pre and pist tags                |
 
 *To be continued*

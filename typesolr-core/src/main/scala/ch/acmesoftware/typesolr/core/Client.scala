@@ -1,8 +1,12 @@
 package ch.acmesoftware.typesolr.core
 
-import ch.acmesoftware.typesolr.core.Client.QueryResult
+import ch.acmesoftware.typesolr.core.Client.Result
+import ch.acmesoftware.typesolr.core.Document.{DocumentListItem, InvalidDocument}
+import ch.acmesoftware.typesolr.querydsl.Query
 import org.apache.solr.client.solrj.SolrClient
+import org.apache.solr.client.solrj.response.QueryResponse
 
+import scala.collection.JavaConverters._
 import scala.language.higherKinds
 
 trait Client[F[_]] {
@@ -11,21 +15,51 @@ trait Client[F[_]] {
 
   def index[T](document: T)(implicit documentEncoder: DocumentEncoder[T]): F[Unit]
 
-  def doIndex[T](document: T)(implicit documentEncoder: DocumentEncoder[T]): Unit = ???
+  def doIndex[T](document: T)(implicit documentEncoder: DocumentEncoder[T]): Unit = {
+    val encodedDoc = documentEncoder.encode(document)
 
-  def query[T](q: String)(implicit documentDecoder: DocumentDecoder[T]): F[QueryResult[T]]
+    solr.add(encodedDoc.toSolrInputDoc)
+  }
 
-  def doQuery[T](q: String)(implicit documentDecoder: DocumentDecoder[T]): QueryResult[T] = ???
+  def query[T](q: Query)(implicit documentDecoder: DocumentDecoder[T]): F[Result[T]]
+
+  protected def result[T](sr: QueryResponse, q: Query, documentDecoder: DocumentDecoder[T]): Result[T] = {
+    val docs = sr.getResults.iterator().asScala.
+      map(Document.fromSolr).
+      map(documentDecoder.toDocumentListItem).
+      toList
+
+    Result(docs, q)
+  }
 }
 
 object Client {
 
-  sealed trait IndexResult
+  case class Result[T](docs: List[DocumentListItem[T]], query: Query) {
 
-  case object Success extends IndexResult
+    def size: Int = docs.size
 
-  trait QueryResult[T] {
-    def documents: Seq[T]
+    /** Returns only successfully decoded documents, executing errorEffect for invalid documents */
+    def valid(invalidEffect: InvalidDocument => Unit): List[T] = docs.flatMap(_.fold(
+      e => {
+        invalidEffect(e)
+        None
+      },
+      Some(_)
+    ))
+
+    /** Returns the number of failures **/
+    def errors: Int = docs.size - valid(_ => ()).size
+
+    /** Returns true if the result contains errored documents **/
+    def isClean: Boolean = errors == 0
+
+    /** Folds all results to a given type
+      *
+      * @param errorFn   Function to process errors
+      * @param successFn Function to process successes
+      */
+    def fold[A](errorFn: InvalidDocument => A, successFn: T => A): List[A] = docs.map(_.fold(errorFn, successFn))
   }
 
 }

@@ -1,14 +1,14 @@
 package ch.acmesoftware.typesolr.core
 
-import cats.data.ValidatedNel
-import ch.acmesoftware.typesolr.core.DocumentDecoder.DocumentValidationResult
-import ch.acmesoftware.typesolr.core.FieldDecoder.FieldValidationError
+import cats.data.Validated._
+import ch.acmesoftware.typesolr.core.Document.{DocumentListItem, InvalidDocument}
+import ch.acmesoftware.typesolr.core.FieldDecoder.FieldValidationResult
 
 trait DocumentDecoder[T] {
 
-  def decode(document: Document): DocumentValidationResult[T]
-}
+  def decode(document: Document): FieldValidationResult[T]
 
-object DocumentDecoder {
-  type DocumentValidationResult[T] = ValidatedNel[FieldValidationError, T]
+  def toDocumentListItem(document: Document): DocumentListItem[T] = {
+    decode(document).fold(e => Invalid(InvalidDocument(document, e.toList)), Valid(_))
+  }
 }

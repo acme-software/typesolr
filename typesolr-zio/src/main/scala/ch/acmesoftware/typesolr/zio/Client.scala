@@ -2,6 +2,7 @@ package ch.acmesoftware.typesolr.zio
 
 import ch.acmesoftware.typesolr.core
 import ch.acmesoftware.typesolr.core.{ClientFactory, DocumentDecoder, DocumentEncoder}
+import ch.acmesoftware.typesolr.querydsl.{Query, QueryParser}
 import org.apache.solr.client.solrj.SolrClient
 import scalaz.zio.IO
 
@@ -11,9 +12,11 @@ case class Client(solr: SolrClient) extends core.Client[ThrowableIO] {
     doIndex(document)
   }
 
-  override def query[T](q: String)(implicit documentDecoder: DocumentDecoder[T]): ThrowableIO[core.Client.QueryResult[T]] = IO.point{
-    doQuery(q)
-  }
+  override def query[T](q: Query)(implicit documentDecoder: DocumentDecoder[T]): ThrowableIO[core.Client.Result[T]] = for {
+    solrQuery <- IO.now(QueryParser.parse(q))
+    solrResponse <- IO.point(solr.query(solrQuery))
+    res <- IO.point(result(solrResponse, q, documentDecoder))
+  } yield res
 }
 
 object Client extends ClientFactory[ThrowableIO] {
