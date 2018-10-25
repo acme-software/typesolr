@@ -41,8 +41,12 @@ all queries are valid.*
 ```scala
 import ch.acmesoftware.typesolr.querydsl._
 
-val q = ("field_a" =:= "foo" and ("field_b" =*:*= "wildcard" or "field_b" =~= "fuzzy match"))
-q.build // (field_a: "foo" and (field_b:: *wildcard* or field_b: ~fuzzy match))
+val query = "field_a" =:= "foo" and (
+  "field_b" =*:*= "wildcard" or 
+  "field_b" =~= "fuzzy match"
+)
+
+query.q // (field_a: "foo" and (field_b:: *wildcard* or field_b: ~fuzzy match))
 ```
 
 **Explanation:**
@@ -74,7 +78,7 @@ the operators reference for details.
 | `=:*=`        | `wildcard[T](value: String, wildcardType: WildcardType)`| Wildcard match (right side)          |
 | `=*:*=`       | `wildcard[T](value: String, wildcardType: WildcardType)`| Wildcard match (both sides)          |
 | `=~=`         | `fuzzy(value: String)`                                  | Fuzzy match                          |
-| `=~=(amount)` | `fuzzy(value: String).at(amount: Int)`                  | Fuzzy match with amount              |
+| `=~= "a" at 1`| `fuzzy(value: String).at(amount: Int)`                  | Fuzzy match with amount              |
 
 #### Additional
 
@@ -83,5 +87,3 @@ the operators reference for details.
 | `^^ "field"`                    | `highlight[T](field: String)`      | Enables SOLR's term highlighting for the given field name |
 | `^^ "a" :: "b" :: "c"`          | `highlight[T](fields: Seq[String])`| Enables SOLR's term highlighting for multiple fields      |
 | `^^ "field" t "<b>" </> "</b>"` | `highlight[T](fields: Seq[String])`| Highlighting with custom pre and pist tags                |
-
-*To be continued*

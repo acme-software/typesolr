@@ -4,8 +4,7 @@ lazy val `typesolr-core` = (project in file("./typesolr-core")).
     commonSettings,
     libraryDependencies ++= Seq(
       "org.apache.solr" % "solr-solrj" % "7.5.0",
-      "org.typelevel" %% "cats-core" % "1.4.0",
-      "com.chuusai" %% "shapeless" % "2.3.3"
+      "org.typelevel" %% "cats-core" % "1.4.0"
     )
   )
 

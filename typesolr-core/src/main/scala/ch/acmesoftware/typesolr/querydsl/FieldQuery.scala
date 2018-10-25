@@ -17,11 +17,10 @@ final case class WildcardFieldQuery[T](name: String, value: T, wildcardType: Wil
 
 final case class FuzzyFieldQuery[T](name: String, value: T, fuzzyAmount: Option[Int] = None) extends Query {
 
-  def at(amount: Int):FuzzyFieldQuery[T] = copy(fuzzyAmount = Some(amount))
+  def at(amount: Int): FuzzyFieldQuery[T] = copy(fuzzyAmount = Some(amount))
 
   override def q: String = {
     val fuzzyOp = "~" + fuzzyAmount.map(_.toString).getOrElse("")
     s"""${escapeField(name)}: ${processValue(value)}$fuzzyOp"""
   }
 }
-
