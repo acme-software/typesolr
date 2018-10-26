@@ -1,9 +1,12 @@
 package ch.acmesoftware.typesolr.zio
 
+import java.nio.file.Path
+
 import ch.acmesoftware.typesolr.core
 import ch.acmesoftware.typesolr.core.{ClientFactory, DocumentDecoder, DocumentEncoder}
 import ch.acmesoftware.typesolr.querydsl.{Query, QueryParser}
 import org.apache.solr.client.solrj.SolrClient
+
 import scalaz.zio.IO
 
 case class Client(solr: SolrClient) extends core.Client[ThrowableIO] {
@@ -23,5 +26,10 @@ object Client extends ClientFactory[ThrowableIO] {
 
   override def http(url: String, connectionTimeout: Int, socketTimeout: Int): ThrowableIO[Client] = IO.point {
     Client(makeHttp(url, connectionTimeout, socketTimeout))
+  }
+
+  override def embedded(rootDir: Path, defaultCoreName: String)
+                       (implicit creator: ClientFactory.EmbeddedCreator): ThrowableIO[core.Client[ThrowableIO]] = IO.point{
+    Client(creator.create(rootDir, defaultCoreName))
   }
 }

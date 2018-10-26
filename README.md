@@ -87,3 +87,46 @@ the operators reference for details.
 | `^^ "field"`                    | `highlight[T](field: String)`      | Enables SOLR's term highlighting for the given field name |
 | `^^ "a" :: "b" :: "c"`          | `highlight[T](fields: Seq[String])`| Enables SOLR's term highlighting for multiple fields      |
 | `^^ "field" t "<b>" </> "</b>"` | `highlight[T](fields: Seq[String])`| Highlighting with custom pre and pist tags                |
+
+Client
+------
+
+The `Client` ist the main entrypoint to interact with SOLR. It provides mdedthods to index documents and query them. 
+The library provides a tagless DSL to interact with different IO Monads (see Usage). In the following examples, 
+`cats-effect`s `IO[T]` is used.
+
+
+### Build a Client instance
+
+There are different options to build a solr client from. The default one is an **HTTP connection**. See the following example:
+
+```scala
+import cats.effect.IO
+import ch.acmesoftware.typesolr.catseffect._
+
+val client: IO[Client] = Client.http("http://localhost:8983/techproducts")
+```
+
+But, for testing or local stuff, you can also run an **embedded solr instance**. To achieve this, you need an additional SBT
+dependency:
+
+```scala
+// build.sbt
+libraryDependencies += "ch.acmesoftware" %% "typesolr-embedded" % "VERSION"
+```
+
+Now you can build embedded clients by providing a solr core root directory (e.g. `/tmp/test-solr-dir`) on your local 
+machine:
+
+```scala
+import cats.effect.IO
+import ch.acmesoftware.typesolr.catseffect._
+import ch.acmesoftware.typesolr.embedded._
+
+val client: IO[Client] = Client.embedded("/tmp/test-solr-dir")
+```
+
+**Heads Up:**
+
+The embedded solr server should not be used in production. The IO-Monad will fail, if there's something wrong with the 
+provided directory. See solr documentation for details.
