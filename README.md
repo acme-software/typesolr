@@ -1,5 +1,5 @@
-TypeSOLR - A typed Scala Client for Apache Solr 
-===============================================
+TypeSOLR - A typesafe Scala Client for Apache Solr 
+==================================================
 
 [![Build Status](https://travis-ci.org/acme-software/typesolr.svg?branch=master)](https://travis-ci.org/acme-software/typesolr) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/3f4d6692386840668589bbf17d90437b)](https://www.codacy.com/app/frne/typesolr?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=acme-software/typesolr&amp;utm_campaign=Badge_Grade)
 
