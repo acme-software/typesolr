@@ -1,7 +1,8 @@
 package ch.acmesoftware.typesolr
 
-import ch.acmesoftware.typesolr.core.FieldDecoder.{EmptyValue, TypeMismatch}
+import java.util.UUID
 
+import ch.acmesoftware.typesolr.core.FieldDecoder.{EmptyValue, TypeMismatch}
 import cats.data._
 import cats.data.Validated._
 import cats.implicits._
@@ -25,6 +26,8 @@ package object core {
   implicit val doubleFieldEncoder: FieldEncoder[Double] = toStringFieldEncoder[Double]
   implicit val booleanFieldEncoder: FieldEncoder[Boolean] = toStringFieldEncoder[Boolean]
   implicit val bigDecimalFieldEncoder: FieldEncoder[BigDecimal] = toStringFieldEncoder[BigDecimal]
+  implicit val uuidFieldEncoder: FieldEncoder[UUID] = toStringFieldEncoder[UUID]
+
 
   implicit def optionFieldEncoder[T](implicit enc: FieldEncoder[T]): FieldEncoder[Option[T]] =
     f => f.key -> f.value.toList.flatMap(valueEncode(_, enc))
@@ -52,6 +55,7 @@ package object core {
   implicit val doubleFieldDecoder: FieldDecoder[Double] = fromStringFieldDecoder(_.toDouble)
   implicit val booleanFieldDecoder: FieldDecoder[Boolean] = fromStringFieldDecoder(_.toBoolean)
   implicit val bigDecimalFieldDecoder: FieldDecoder[BigDecimal] = fromStringFieldDecoder(BigDecimal(_))
+  implicit val uuidFieldDecoder: FieldDecoder[UUID] = fromStringFieldDecoder(UUID.fromString(_))
 
   //implicit def optionFieldDecoder[T](implicit dec: FieldDecoder[T]): FieldDecoder[Option[T]] = (k, v) => dec.decode(k, v) match {
   //  case Left(e) => Left[](Some(e))

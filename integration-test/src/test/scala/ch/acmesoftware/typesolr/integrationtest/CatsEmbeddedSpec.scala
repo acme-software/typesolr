@@ -1,6 +1,7 @@
 package ch.acmesoftware.typesolr.integrationtest
 
 import java.nio.file.Paths
+import java.util.UUID
 
 import ch.acmesoftware.typesolr.catseffect._
 import ch.acmesoftware.typesolr.core._
@@ -49,19 +50,57 @@ class CatsEmbeddedSpec extends CatsIntegrationTest with BeforeAndAfterAll {
 
   "Client" should "index a document and query it again" in {
 
-    val client = CatsClient.embedded(solrCoreBaseDir).unsafeRunSync()
-
     val doc = ("field_a" -> "foo") ~ ("field_b" -> true)
 
     val res = (for {
+      client <- CatsClient.embedded(solrCoreBaseDir)
       _ <- client.index(doc)
       _ <- client.commit()
       r <- client.query("field_a" =:= "foo" and "field_b" =:= true)
+      _ <- client.close
     } yield r).unsafeRunSync()
 
     res.isClean shouldBe true
     res.size shouldEqual 1
+  }
 
-    client.close.unsafeRunSync()
+  it should "index a case class and query it again" in {
+
+    import cats.data.Validated._
+    import cats.implicits._
+
+    case class TestDoc(id: UUID, foo: String, bar: Int)
+
+    implicit val testDocCodec: Codec[TestDoc] = Codec(d =>
+        ("id" -> d.id) ~
+        ("foo_s" -> d.foo) ~
+        ("bar_i" -> d.bar),
+      d => (
+        d.field[UUID]("id"),
+        d.field[String]("foo_s"),
+        d.field[Int]("bar_i")
+      ).mapN(TestDoc)
+    )
+
+    val doc1 = TestDoc(UUID.randomUUID(), "some-test", 42)
+    val doc2 = TestDoc(UUID.randomUUID(),"some-other-test", 42)
+
+    val res = (for {
+      client <- CatsClient.embedded(solrCoreBaseDir)
+      _ <- client.index(doc1)
+      _ <- client.index(doc1) // index a second time to test id idempotence
+      _ <- client.index(doc2)
+      _ <- client.commit()
+      r1 <- client.query[TestDoc]("foo_s" =:= "some-test")
+      r2 <- client.query[TestDoc]("bar_i" =:= 42)
+      _ <- client.close
+    } yield (r1, r2)).unsafeRunSync()
+
+    res._1.isClean shouldBe true
+    res._1.size shouldEqual 1
+    res._1.valid(_ => ()).headOption shouldEqual Some(doc1)
+
+    res._2.isClean shouldBe true
+    res._2.size shouldEqual 2
   }
 }
