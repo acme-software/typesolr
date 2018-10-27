@@ -1,4 +1,6 @@
 
+lazy val scalatest = "org.scalatest" %% "scalatest" % "3.0.5"
+
 lazy val `typesolr-core` = (project in file("./typesolr-core")).
   settings(
     commonSettings,
@@ -33,12 +35,21 @@ lazy val `typesolr-zio` = (project in file("./typesolr-zio")).
     )
   ).dependsOn(`typesolr-core`)
 
+lazy val `integration-test` = (project in file("./integration-test")).
+configs(IntegrationTest).
+  settings(
+    commonSettings,
+    Defaults.itSettings,
+    libraryDependencies += scalatest % "it,test",
+    Test / parallelExecution := false
+  ).dependsOn(`typesolr-core`, `typesolr-cats-effect`, `typesolr-zio`, `typesolr-embedded`)
+
 lazy val commonSettings = Seq(
   scalaVersion := "2.12.7",
   resolvers += "Restlet Repository" at "http://maven.restlet.org",
   libraryDependencies ++= Seq(
     "org.scalactic" %% "scalactic" % "3.0.5",
-    "org.scalatest" %% "scalatest" % "3.0.5" % "test"
+    scalatest % "test"
   ),
   scalacOptions ++= Seq(
     "-deprecation",
