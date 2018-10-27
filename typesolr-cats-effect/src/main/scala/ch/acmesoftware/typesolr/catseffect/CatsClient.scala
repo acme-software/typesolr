@@ -8,7 +8,7 @@ import ch.acmesoftware.typesolr.core.{ClientFactory, DocumentDecoder, DocumentEn
 import ch.acmesoftware.typesolr.querydsl.{Query, QueryParser}
 import org.apache.solr.client.solrj.SolrClient
 
-case class Client(solr: SolrClient) extends core.Client[IO] {
+case class CatsClient(solr: SolrClient) extends core.Client[IO] {
 
   override def index[T](document: T)(implicit documentEncoder: DocumentEncoder[T]): IO[Unit] = IO {
     doIndex(document)
@@ -18,16 +18,28 @@ case class Client(solr: SolrClient) extends core.Client[IO] {
     solrQuery <- IO(QueryParser.parse(q))
     solrResponse <- IO(solr.query(solrQuery))
   } yield result(solrResponse, q, documentDecoder)
+
+  override def commit(): IO[Unit] = IO{
+    doCommit()
+  }
+
+  override def ping: IO[core.Client.PingResponse] = IO{
+    doPing()
+  }
+
+  override def close: IO[Unit] = IO {
+    doClose()
+  }
 }
 
-object Client extends ClientFactory[IO] {
+object CatsClient extends ClientFactory[IO] {
 
   override def http(url: String, connectionTimeout: Int, socketTimeout: Int): IO[core.Client[IO]] = IO {
-    Client(makeHttp(url, connectionTimeout, socketTimeout))
+    CatsClient(makeHttp(url, connectionTimeout, socketTimeout))
   }
 
   override def embedded(rootDir: Path, defaultCoreName: String)
                        (implicit creator: ClientFactory.EmbeddedCreator): IO[core.Client[IO]] = IO{
-    Client(creator.create(rootDir, defaultCoreName))
+    CatsClient(creator.create(rootDir, defaultCoreName))
   }
 }

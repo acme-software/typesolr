@@ -2,7 +2,7 @@ package ch.acmesoftware.typesolr
 
 package object querydsl {
 
-  implicit class Field(name: String) {
+  implicit class FieldOps(name: String) {
 
     def =:=[T](value: T): ExactFieldQuery[T] = exact(value)
 

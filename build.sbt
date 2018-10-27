@@ -40,7 +40,10 @@ configs(IntegrationTest).
   settings(
     commonSettings,
     Defaults.itSettings,
-    libraryDependencies += scalatest % "it,test",
+    libraryDependencies ++= Seq(
+      scalatest % "it,test",
+      "commons-io" % "commons-io" % "2.6"
+    ),
     Test / parallelExecution := false
   ).dependsOn(`typesolr-core`, `typesolr-cats-effect`, `typesolr-zio`, `typesolr-embedded`)
 

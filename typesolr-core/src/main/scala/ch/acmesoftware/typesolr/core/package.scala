@@ -57,6 +57,8 @@ package object core {
   //  case Left(e) => Left[](Some(e))
   //}
 
+  // document codecs
 
+  implicit val identityCodec: Codec[Document] = Codec(d => d, _.validNel)
 
 }
