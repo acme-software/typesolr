@@ -1,10 +1,13 @@
 package ch.acmesoftware.typesolr
 
-import ch.acmesoftware.typesolr.core.FieldDecoder.{EmptyValue, TypeMismatch}
+import java.util.UUID
 
+import ch.acmesoftware.typesolr.core.FieldDecoder.{EmptyValue, InvalidValue, TypeMismatch}
 import cats.data._
 import cats.data.Validated._
 import cats.implicits._
+
+import scala.util.Try
 
 package object core {
 
@@ -25,6 +28,8 @@ package object core {
   implicit val doubleFieldEncoder: FieldEncoder[Double] = toStringFieldEncoder[Double]
   implicit val booleanFieldEncoder: FieldEncoder[Boolean] = toStringFieldEncoder[Boolean]
   implicit val bigDecimalFieldEncoder: FieldEncoder[BigDecimal] = toStringFieldEncoder[BigDecimal]
+  implicit val uuidFieldEncoder: FieldEncoder[UUID] = toStringFieldEncoder[UUID]
+
 
   implicit def optionFieldEncoder[T](implicit enc: FieldEncoder[T]): FieldEncoder[Option[T]] =
     f => f.key -> f.value.toList.flatMap(valueEncode(_, enc))
@@ -38,11 +43,10 @@ package object core {
   // field decoders
 
   private def fromStringFieldDecoder[T](f: String => T): FieldDecoder[T] = (k, v) => v.headOption.map{strV =>
-    try{
-      Field(k, f(strV)).validNel
-    } catch {
-      case e: Throwable => TypeMismatch(k).invalidNel
-    }
+    Try(Field(k, f(strV))).fold(_ match {
+      case e: ClassCastException => TypeMismatch(k).invalidNel
+      case e: Exception => InvalidValue(k).invalidNel
+    }, _.validNel)
   }.getOrElse(EmptyValue(k).invalidNel)
 
   implicit val stringFieldDecoder: FieldDecoder[String] = fromStringFieldDecoder(_.toString)
@@ -52,11 +56,14 @@ package object core {
   implicit val doubleFieldDecoder: FieldDecoder[Double] = fromStringFieldDecoder(_.toDouble)
   implicit val booleanFieldDecoder: FieldDecoder[Boolean] = fromStringFieldDecoder(_.toBoolean)
   implicit val bigDecimalFieldDecoder: FieldDecoder[BigDecimal] = fromStringFieldDecoder(BigDecimal(_))
+  implicit val uuidFieldDecoder: FieldDecoder[UUID] = fromStringFieldDecoder(UUID.fromString(_))
 
   //implicit def optionFieldDecoder[T](implicit dec: FieldDecoder[T]): FieldDecoder[Option[T]] = (k, v) => dec.decode(k, v) match {
   //  case Left(e) => Left[](Some(e))
   //}
 
+  // document codecs
 
+  implicit val identityCodec: Codec[Document] = Codec(d => d, _.validNel)
 
 }

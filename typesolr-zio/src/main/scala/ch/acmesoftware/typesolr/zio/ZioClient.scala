@@ -9,7 +9,7 @@ import org.apache.solr.client.solrj.SolrClient
 
 import scalaz.zio.IO
 
-case class Client(solr: SolrClient) extends core.Client[ThrowableIO] {
+case class ZioClient(solr: SolrClient) extends core.Client[ThrowableIO] {
 
   override def index[T](document: T)(implicit documentEncoder: DocumentEncoder[T]): ThrowableIO[Unit] = IO.point {
     doIndex(document)
@@ -20,16 +20,22 @@ case class Client(solr: SolrClient) extends core.Client[ThrowableIO] {
     solrResponse <- IO.point(solr.query(solrQuery))
     res <- IO.point(result(solrResponse, q, documentDecoder))
   } yield res
+
+  override def commit(): ThrowableIO[Unit] = IO.point(doCommit())
+
+  override def ping: ThrowableIO[core.Client.PingResponse] = IO.point(doPing())
+
+  override def close: ThrowableIO[Unit] = IO.point(doClose())
 }
 
-object Client extends ClientFactory[ThrowableIO] {
+object ZioClient extends ClientFactory[ThrowableIO] {
 
-  override def http(url: String, connectionTimeout: Int, socketTimeout: Int): ThrowableIO[Client] = IO.point {
-    Client(makeHttp(url, connectionTimeout, socketTimeout))
+  override def http(url: String, connectionTimeout: Int, socketTimeout: Int): ThrowableIO[ZioClient] = IO.point {
+    ZioClient(makeHttp(url, connectionTimeout, socketTimeout))
   }
 
   override def embedded(rootDir: Path, defaultCoreName: String)
                        (implicit creator: ClientFactory.EmbeddedCreator): ThrowableIO[core.Client[ThrowableIO]] = IO.point{
-    Client(creator.create(rootDir, defaultCoreName))
+    ZioClient(creator.create(rootDir, defaultCoreName))
   }
 }

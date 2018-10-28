@@ -16,5 +16,7 @@ object FieldDecoder {
 
   case class EmptyValue(fieldName: String) extends FieldValidationError
 
+  case class InvalidValue(fieldName: String) extends FieldValidationError
+
   type FieldValidationResult[A] = ValidatedNel[FieldValidationError, A]
 }
