@@ -3,13 +3,15 @@ package ch.acmesoftware.typesolr.integrationtest
 import java.nio.file.Paths
 import java.util.UUID
 
+import cats.data.Validated._
+import cats.implicits._
 import ch.acmesoftware.typesolr.catseffect._
 import ch.acmesoftware.typesolr.core._
-import ch.acmesoftware.typesolr.querydsl._
 import ch.acmesoftware.typesolr.embedded._
-import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
+import ch.acmesoftware.typesolr.querydsl._
 import org.apache.commons.io.FileUtils._
 import org.apache.solr.common.SolrException
+import org.scalatest.BeforeAndAfterAll
 
 class CatsEmbeddedSpec extends CatsIntegrationTest with BeforeAndAfterAll {
 
@@ -23,7 +25,7 @@ class CatsEmbeddedSpec extends CatsIntegrationTest with BeforeAndAfterAll {
 
     assert(testCoreConfigDir.toFile.isDirectory && testCoreConfigDir.toFile.canRead, "testCoreConfigDir must be a directory and readable")
 
-    if(!solrCoreBaseDir.toFile.exists()) {
+    if (!solrCoreBaseDir.toFile.exists()) {
       assert(solrCoreBaseDir.toFile.mkdirs(), "Cannot create solr embedded base dir")
     }
 
@@ -66,13 +68,10 @@ class CatsEmbeddedSpec extends CatsIntegrationTest with BeforeAndAfterAll {
 
   it should "index a case class and query it again" in {
 
-    import cats.data.Validated._
-    import cats.implicits._
-
     case class TestDoc(id: UUID, foo: String, bar: Int)
 
     implicit val testDocCodec: Codec[TestDoc] = Codec(d =>
-        ("id" -> d.id) ~
+      ("id" -> d.id) ~
         ("foo_s" -> d.foo) ~
         ("bar_i" -> d.bar),
       d => (
@@ -83,7 +82,7 @@ class CatsEmbeddedSpec extends CatsIntegrationTest with BeforeAndAfterAll {
     )
 
     val doc1 = TestDoc(UUID.randomUUID(), "some-test", 42)
-    val doc2 = TestDoc(UUID.randomUUID(),"some-other-test", 42)
+    val doc2 = TestDoc(UUID.randomUUID(), "some-other-test", 42)
 
     val res = (for {
       client <- CatsClient.embedded(solrCoreBaseDir)

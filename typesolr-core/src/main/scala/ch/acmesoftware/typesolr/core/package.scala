@@ -2,10 +2,12 @@ package ch.acmesoftware.typesolr
 
 import java.util.UUID
 
-import ch.acmesoftware.typesolr.core.FieldDecoder.{EmptyValue, TypeMismatch}
+import ch.acmesoftware.typesolr.core.FieldDecoder.{EmptyValue, InvalidValue, TypeMismatch}
 import cats.data._
 import cats.data.Validated._
 import cats.implicits._
+
+import scala.util.Try
 
 package object core {
 
@@ -41,11 +43,10 @@ package object core {
   // field decoders
 
   private def fromStringFieldDecoder[T](f: String => T): FieldDecoder[T] = (k, v) => v.headOption.map{strV =>
-    try{
-      Field(k, f(strV)).validNel
-    } catch {
-      case e: Throwable => TypeMismatch(k).invalidNel
-    }
+    Try(Field(k, f(strV))).fold(_ match {
+      case e: ClassCastException => TypeMismatch(k).invalidNel
+      case e: Exception => InvalidValue(k).invalidNel
+    }, _.validNel)
   }.getOrElse(EmptyValue(k).invalidNel)
 
   implicit val stringFieldDecoder: FieldDecoder[String] = fromStringFieldDecoder(_.toString)
