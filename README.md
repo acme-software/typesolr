@@ -3,10 +3,22 @@ TypeSOLR - A typesafe Scala Client for Apache Solr
 
 [![Build Status](https://travis-ci.org/acme-software/typesolr.svg?branch=master)](https://travis-ci.org/acme-software/typesolr) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/3f4d6692386840668589bbf17d90437b)](https://www.codacy.com/app/frne/typesolr?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=acme-software/typesolr&amp;utm_campaign=Badge_Grade)
 
-**Provides a typesafe, ideomatic Scala DSL for indexing and querying an Apache Solr search index**
+***This library rovides a typesafe, ideomatic Scala DSL for indexing and querying an Apache Solr search index***
 
-***By now, this is totally experimental and by no means production-ready. Provided information and code can be buggy, 
-not yet implemented or completely wrong. Working towards a first stable version (`1.0.0`)***
+Features
+--------
+- Rich client lib for [Apache Solr](http://lucene.apache.org/solr/) based on [SolrJ](https://lucene.apache.org/solr/guide/7_1/using-solrj.html) 7.x
+- Tagless final DSL with implementations for
+  - [Cats Effect](https://typelevel.org/cats-effect/)
+  - [ZIO](https://scalaz.github.io/scalaz-zio/)
+  - More to follow
+- Builder for [http](#http-client) and [embedded](#embedded-client) clients
+- Intuitive document builder and indexer
+- Codec for product and case class mapping
+- Typesafe query DSL
+- Covering advances SOLR features like
+  - Highlighting
+  - More to follow
 
 Usage
 -----
@@ -17,17 +29,95 @@ Install using SBT:
 libraryDependencies += "ch.acmesoftware" %% "typesolr-core" % "VERSION"
 ```
 
-This lib is intended to use together with an IO-Monad, because talking to a SOLR server is effectful. By now, there are 
+This lib is intended to be used together with an IO-Monad, because talking to a SOLR server is effectful. By now, there are 
 implementations for [Cats Effect](https://typelevel.org/cats-effect/) and [ZIO](https://scalaz.github.io/scalaz-zio/).
 
-Use one of the following:
+Choose one:
 
 ```scala
 libraryDependencies += "ch.acmesoftware" %% "typesolr-cats-effect" % "VERSION"
 libraryDependencies += "ch.acmesoftware" %% "typesolr-zio" % "VERSION"
 ```
 
-Basically, this is a tagless final DSL, so you can also implement your own effect type...
+In the following examples, `cats-effect`s `IO[T]` / `CatsClient` is used. There is also a `ZioClient`.
+
+Client
+------
+
+The `Client` ist the main entry point to interact with SOLR. It provides methods to index documents and query them. 
+
+### Http Client
+
+There are different options to build a solr client from. The default one is an **HTTP connection**. See the following example:
+
+```scala
+import cats.effect.IO
+import ch.acmesoftware.typesolr.core._
+import ch.acmesoftware.typesolr.catseffect._
+
+val client: IO[Client] = CatsClient.http("http://localhost:8983/techproducts")
+```
+
+### Embedded Client
+
+But, for testing or local stuff, you can also run an **embedded solr instance**. To achieve this, you need an additional SBT
+dependency:
+
+```scala
+// build.sbt
+libraryDependencies += "ch.acmesoftware" %% "typesolr-embedded" % "VERSION"
+```
+
+Now you can build embedded clients by providing a solr core root directory (e.g. `/tmp/test-solr-dir`) on your local 
+machine:
+
+```scala
+import cats.effect.IO
+import ch.acmesoftware.typesolr.core._
+import ch.acmesoftware.typesolr.catseffect._
+import ch.acmesoftware.typesolr.embedded._
+
+val client: IO[Client] = CatsClient.embedded("/tmp/test-solr-dir")
+```
+
+**Heads Up:**
+
+The embedded solr server should not be used in production. The IO-Monad will fail, if there's something wrong with the 
+provided directory. See solr documentation for details.
+
+Document Builder
+----------------
+
+A SOLR Document is represented by a `ch.acmesoftware.typesolr.core.Document` instance. it can be built using the 
+document building DSL or by mapping any kind of objects like (case) classes using a `ch.acmesoftware.typesolr.core.Codec`
+which is able to encode and decode custom types.
+
+### Building DSL
+
+The simplest case of creating an indexable document is using its own API. One can use the named DSl:
+
+```scala
+import ch.acmesoftware.typesolr.core._
+
+val doc = Document.
+  withField("field_a" ->"test").
+  withField("field_b" -> Option(42)).
+  withField("field_c" -> true)
+```
+
+...or the ASCII DSL:
+
+
+```scala
+import ch.acmesoftware.typesolr.core._
+
+val doc = ("field_a" ->"test") ~
+      ("field_b" -> Option(42)) ~
+      ("field_c" -> true)
+```
+
+The two implementations do exactly the same, it's just a matter of choice, which one you use. Basically, you can combine 
+them, but I'd recommend sticking to one.
 
 Typesafe Query DSL
 ------------------
@@ -87,46 +177,3 @@ the operators reference for details.
 | `^^ "field"`                    | `highlight[T](field: String)`      | Enables SOLR's term highlighting for the given field name |
 | `^^ "a" :: "b" :: "c"`          | `highlight[T](fields: Seq[String])`| Enables SOLR's term highlighting for multiple fields      |
 | `^^ "field" t "<b>" </> "</b>"` | `highlight[T](fields: Seq[String])`| Highlighting with custom pre and pist tags                |
-
-Client
-------
-
-The `Client` ist the main entrypoint to interact with SOLR. It provides mdedthods to index documents and query them. 
-The library provides a tagless DSL to interact with different IO Monads (see Usage). In the following examples, 
-`cats-effect`s `IO[T]` is used.
-
-
-### Build a Client instance
-
-There are different options to build a solr client from. The default one is an **HTTP connection**. See the following example:
-
-```scala
-import cats.effect.IO
-import ch.acmesoftware.typesolr.catseffect._
-
-val client: IO[Client] = Client.http("http://localhost:8983/techproducts")
-```
-
-But, for testing or local stuff, you can also run an **embedded solr instance**. To achieve this, you need an additional SBT
-dependency:
-
-```scala
-// build.sbt
-libraryDependencies += "ch.acmesoftware" %% "typesolr-embedded" % "VERSION"
-```
-
-Now you can build embedded clients by providing a solr core root directory (e.g. `/tmp/test-solr-dir`) on your local 
-machine:
-
-```scala
-import cats.effect.IO
-import ch.acmesoftware.typesolr.catseffect._
-import ch.acmesoftware.typesolr.embedded._
-
-val client: IO[Client] = Client.embedded("/tmp/test-solr-dir")
-```
-
-**Heads Up:**
-
-The embedded solr server should not be used in production. The IO-Monad will fail, if there's something wrong with the 
-provided directory. See solr documentation for details.

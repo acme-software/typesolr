@@ -32,7 +32,7 @@ object Document {
 
   type DocumentListItem[T] = Validated[InvalidDocument, T]
 
-  def of[A](f: Field[A])(implicit enc: FieldEncoder[A]) = Document(Map(enc.encode(f)))
+  def withField[A](f: Field[A])(implicit enc: FieldEncoder[A]) = Document(Map(enc.encode(f)))
 
   def fromSolr(doc: SolrDocument): Document = doc.getFieldNames.asScala.
     foldLeft(Document(Map.empty))(
